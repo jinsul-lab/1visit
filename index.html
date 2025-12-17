@@ -2,13 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>JINSUL-1회 내원 추출기</title>
+  <title>JINSUL - 1회 내원 추출기 선택</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      /* JINSUL 통합 팔레트 (비트/의사랑과 동일) */
+      /* 배경색 (회색조) */
       --bg:#f6f6f7;
-      --card:rgba(255,255,255,0.86); /* 카드 반투명 적용 */
+      
+      /* [핵심 수정] 카드 배경: 흰색이지만 70%만 불투명하게 (뒤가 비침) */
+      --card: rgba(255, 255, 255, 0.70);
+      
       --text:#111827;
       --muted:#6b7280;
       --border:#e5e7eb;
@@ -22,65 +25,93 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,'Apple SD Gothic Neo','Noto Sans KR',Arial,sans-serif;
     }
 
-    /* ===== 워터마크 (투명도 10%) ===== */
+    /* 워터마크 (배경 로고) */
     .wm{
       position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
       pointer-events:none; z-index:0;
     }
     .wm img{
       width:min(760px, 78vw);
-      opacity:0.1; /* 요청하신 투명도 10% */
+      opacity:0.1; /* 투명도 10% */
       user-select:none;
       filter: grayscale(1) saturate(0) brightness(.65) contrast(1.05);
     }
     body > *{ position:relative; z-index:1; }
 
-    /* ===== 헤더 & 로고 ===== */
-    header{padding:36px 16px 0; text-align:center;}
+    /* 헤더 */
+    header{padding:40px 16px 0; text-align:center;}
     header .logo{
       width:170px; max-width:70vw; height:auto; display:block; margin:0 auto 10px;
-      filter: grayscale(1) saturate(0) brightness(.45) contrast(1.15); /* 로고 톤 다운 */
+      filter: grayscale(1) saturate(0) brightness(.45) contrast(1.15);
     }
-    h1{margin:10px 0 8px; font-size:24px; font-weight:800; color:#0f172a;}
+    h1{margin:10px 0 30px; font-size:24px; font-weight:800; color:#0f172a;}
     
-    .wrap{max-width:980px; margin:0 auto; padding:22px 16px 56px}
+    .wrap{max-width:980px; margin:0 auto; padding:20px 16px 60px}
     
-    /* ===== 카드 그리드 ===== */
-    .sec-title{ margin:20px 4px 10px; font-size:16px; color:var(--text); font-weight:800; letter-spacing:-.2px; }
-    .grid{display:grid; gap:20px; grid-template-columns:repeat(2,1fr);}
+    .sec-title{ margin:0 4px 14px; font-size:16px; color:var(--text); font-weight:800; letter-spacing:-.2px; }
+    .grid{display:grid; gap:24px; grid-template-columns:repeat(2,1fr);}
     
+    /* 카드 스타일 */
     .card{
-      background:var(--card); /* 반투명 배경 */
+      background:var(--card); /* 투명 배경 적용 */
+      backdrop-filter: blur(10px); /* 유리 효과 (뒤가 흐릿하게 보임) */
       border:1px solid var(--border);
-      border-radius:16px;
-      padding:24px;
-      box-shadow:0 2px 6px rgba(0,0,0,.05);
-      transition:transform .18s ease, box-shadow .18s ease;
+      border-radius:20px;
+      padding:30px;
+      box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      transition:transform .2s ease, box-shadow .2s ease;
       display:flex; flex-direction:column; align-items:flex-start;
     }
-    .card:hover{transform:translateY(-4px); box-shadow:0 10px 20px rgba(0,0,0,.08);}
+    .card:hover{
+      transform:translateY(-4px); 
+      box-shadow:0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+      background: rgba(255, 255, 255, 0.85); /* 호버시 약간 더 밝게 */
+    }
     
     .icon{
-      width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-      background:#f3f4f6; color:#1f2937; margin-bottom:14px;
+      width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,0.6); border:1px solid rgba(0,0,0,0.05);
+      color:#1f2937; margin-bottom:18px;
     }
-    .card h3{margin:0 0 8px; font-size:18px; font-weight:700; color:#111827;}
-    .card p{margin:0 0 20px; color:var(--muted); font-size:14px; line-height:1.5;}
+    .card h3{margin:0 0 10px; font-size:19px; font-weight:700; color:#111827;}
+    .card p{margin:0 0 24px; color:var(--muted); font-size:15px; line-height:1.6;}
     
-    /* ===== 버튼 스타일 ===== */
+    /* 텍스트 내 강조 박스 스타일 */
+    .card p code{
+      background:rgba(0,0,0,0.04); padding:2px 4px; border-radius:4px; 
+      font-family:inherit; font-weight:600; font-size:0.95em; color:#374151;
+    }
+
+    /* 내용 상세 설명 리스트 */
+    .feature-list{
+      margin:0 0 24px; padding:0; list-style:none; width:100%;
+    }
+    .feature-list li{
+      position:relative; padding-left:20px; margin-bottom:8px; font-size:13px; color:#4b5563;
+    }
+    .feature-list li::before{
+      content:"•"; position:absolute; left:4px; color:#9ca3af;
+    }
+
+    /* 버튼 스타일 */
     .btn{
       margin-top:auto;
       display:inline-flex; align-items:center; justify-content:center; width:100%;
-      padding:12px 16px; border-radius:10px; border:1px solid var(--border);
-      background:radial-gradient(120% 120% at 0% 0%,rgba(34,211,238,.25),rgba(34,211,238,.1)); /* 비트 파일 버튼 스타일 */
-      color:#0f172a; font-weight:700; font-size:14px; text-decoration:none;
-      cursor:pointer; transition:background .2s;
+      padding:14px; border-radius:12px; border:1px solid #cffafe;
+      background:linear-gradient(to bottom right, #ecfeff, #cfFAFE);
+      color:#0e7490; font-weight:700; font-size:15px; text-decoration:none;
+      cursor:pointer; transition:all .2s;
+      box-shadow:0 2px 5px rgba(6,182,212,0.1);
     }
-    .btn:hover{ background:rgba(34,211,238,.2); }
+    .btn:hover{ 
+      background:linear-gradient(to bottom right, #cffafe, #a5f3fc);
+      transform:translateY(-1px);
+      box-shadow:0 4px 8px rgba(6,182,212,0.2);
+    }
 
-    footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12px; font-family:sans-serif;}
+    footer{margin-top:60px; text-align:center; color:#9ca3af; font-size:12px;}
     
-    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+    @media (max-width:768px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -102,9 +133,13 @@
           </svg>
         </div>
         <h3>비트 · 1회 내원 확인</h3>
-        <p>✅비트 데이터 파일(xls, csv)을 업로드하여 기간 내 주사 처방이 1회인 환자를 추출합니다</p>
-        <p>1️⃣외래진료실➡️외래환자➡️기간설정➡️검색➡️Excel내려받기</p>
-        <p>2️⃣통계➡️인원통계➡️내원경로통계➡️집계➡️파일로 내려받기</p>
+        
+        <div class="feature-list">
+          <p>✅ <b>비트 데이터 파일</b>(xls, csv)을 업로드하여 기간 내 주사 처방이 1회인 환자를 추출합니다</p>
+          <li> 외래진료실 ➡️ 외래환자 ➡️ 기간설정 ➡️ 검색 ➡️ Excel내려받기</li>
+          <li> 통계 ➡️ 인원통계 ➡️ 내원경로통계 ➡️ 집계 ➡️ 파일로 내려받기</li>
+        </div>
+
         <a class="btn" href="bit-1visit.html">비트 도구 열기</a>
       </div>
 
@@ -115,11 +150,15 @@
           </svg>
         </div>
         <h3>의사랑 · 1회 내원 확인</h3>
-        <p>✅의사랑 데이터 파일(xls, csv)을 업로드하여 기간 내 주사 처방이 1회인 환자를 추출합니다</p>
-        <p>1️⃣사용자 통계 ➡️ 진료실별 또는 담당의별 초진진찰료 내려받기</p>
-        <p>2️⃣사용자 통계 ➡️ 리도카인, 엠카인 등 마취 내려받기</p>
-        <p>3️⃣사용자 통계 ➡️ 초진진찰료 + 재진진찰료 내려받기(총 내원)</p>
-        <p>❌총 내원은 진료실별로 받지 않아도 됩니다</p>
+
+        <div class="feature-list">
+          <p>✅ <b>의사랑 데이터 파일</b>(xls, csv)을 업로드하여 기간 내 주사 처방이 1회인 환자를 추출합니다</p>
+          <li> 사용자 통계 ➡️ 진료실별 또는 담당의별 초진진찰료 내려받기</li>
+          <li> 사용자 통계 ➡️ 리도카인, 엠카인 등 마취 내려받기</li>
+          <li> 사용자 통계 ➡️ 초진진찰료 + 재진진찰료 내려받기(총 내원)</li>
+          <li style="color:#ef4444; margin-top:6px">❌ 총 내원은 진료실별로 받지 않아도 됩니다</li>
+        </div>
+
         <a class="btn" href="ysarang-1visit.html">의사랑 도구 열기</a>
       </div>
     </div>
